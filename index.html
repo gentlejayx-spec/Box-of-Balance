@@ -111,7 +111,7 @@
             pointer-events: none;
         }
 
-        #startButton, #playAgainButton, .gemini-button {
+        #startButton, #playAgainButton {
             font-family: 'VT323', monospace;
             font-size: 1.5em;
             padding: 10px 20px;
@@ -121,26 +121,11 @@
             color: white;
             text-shadow: 2px 2px 0 #000;
             margin-top: 20px;
-        }
-        
-        #startButton, #playAgainButton {
-             background-color: #4CAF50;
-             box-shadow: inset -4px -4px 0px 0px #388E3C;
-        }
-        
-        .gemini-button {
-            background-color: #4a90e2; /* Blue for AI buttons */
-            box-shadow: inset -4px -4px 0px 0px #357ABD;
-        }
-        
-        .gemini-button:disabled {
-            background-color: #999;
-            box-shadow: inset -4px -4px 0px 0px #777;
-            cursor: not-allowed;
+            background-color: #4CAF50;
+            box-shadow: inset -4px -4px 0px 0px #388E3C;
         }
 
-
-        #startButton:hover, #playAgainButton:hover, .gemini-button:not(:disabled):hover {
+        #startButton:hover, #playAgainButton:hover {
             opacity: 0.9;
         }
         
@@ -180,15 +165,22 @@
             width: 100%;
             aspect-ratio: 3 / 4;
             background-color: #d3b389;
-            border: 4px solid #8b5e34;
-            box-shadow: inset 0 0 0 4px #a0714f;
-            font-size: clamp(24px, 8vw, 50px); /* Responsive font size */
+            border: 8px solid #4a4a4a; /* Dark grey border */
+            box-shadow: inset 0 0 0 5px #6e6e6e; /* Lighter grey inner border */
+            border-radius: 8px; /* Softer corners */
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: grab;
             user-select: none;
             transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+        
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .card.dragging {
@@ -287,20 +279,6 @@
         }
         #highscore-list li:last-child { border-bottom: none; }
         
-        #loading-overlay .loader {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #4a90e2;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1.5s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .score-feedback {
             position: absolute;
             font-size: 2.5em;
@@ -324,8 +302,6 @@
         <div id="start-screen" class="screen">
             <h1>Box of Balance</h1>
             <p>Good Eats, Great Health</p>
-            <p id="generate-status" style="height: 20px;"></p>
-            <button id="generateFoodsButton" class="gemini-button">✨ สร้างเมนูอาหารใหม่</button>
             <button id="startButton">เริ่มเกม</button>
         </div>
 
@@ -358,70 +334,60 @@
             <button id="playAgainButton">เล่นอีกครั้ง</button>
         </div>
         
-        <div id="loading-overlay" class="screen hidden">
-            <div class="loader"></div>
-            <p>กำลังเรียก Gemini AI...</p>
-        </div>
     </div>
 
     <script>
     // --- JavaScript: ส่วนของ Logic และการทำงานของเกม ---
 
     let foods = [
-        { name: 'สลัดผัก', emoji: '🥗', type: 'healthy' },
-        { name: 'สเต็กไก่', emoji: '🍗', type: 'healthy' },
-        { name: 'ข้าวกล้อง', emoji: '🍛', type: 'healthy' },
-        { name: 'แกงจืด', emoji: '🍲', type: 'healthy' },
-        { name: 'น้ำดื่ม', emoji: '🥛', type: 'healthy' },
-        { name: 'อะโวคาโด', emoji: '🥑', type: 'healthy' },
-        { name: 'บะหมี่กึ่งฯ', emoji: '🍜', type: 'unhealthy' },
-        { name: 'ชานมไข่มุก', emoji: '🧋', type: 'unhealthy' },
-        { name: 'เฟรนช์ฟรายส์', emoji: '🍟', type: 'unhealthy' },
-        { name: 'ฮอทดอก', emoji: '🌭', type: 'unhealthy' },
-        { name: 'พิซซ่า', emoji: '🍕', type: 'unhealthy' },
-        { name: 'เค้ก', emoji: '🍰', type: 'unhealthy' }
+        { name: 'สุกี้แห้ง', imageUrl: 'https://image.bangkokbiznews.com/uploads/images/contents/w1024/2025/08/dlCRwxZvykAzYl2Ud1KR.webp?x-image-process=style/lg-webp', type: 'healthy' },
+        { name: 'สลัดไก่ย่าง', imageUrl: 'https://www.krungsricard.com/KrungsriCreditCard/media/html/5-salad-chicken.jpg', type: 'healthy' },
+        { name: 'เมี่ยงปลาเผา', imageUrl: 'https://www.sgethai.com/wp-content/uploads/2021/10/11-1.jpg', type: 'healthy' },
+        { name: 'ข้าวต้มปลา', imageUrl: 'https://img.thaicdn.net/u/2017/surauch/cooking/z1_8.jpg', type: 'healthy' },
+        { name: 'ยำวุ้นเส้น', imageUrl: 'https://static.thairath.co.th/media/dFQROr7oWzulq5Fa5LJPy4zeO8hVyKklLA7qGmmpKRC7SJfsrVGYLDlw22JI0tzvhAf.webp', type: 'healthy' },
+        { name: 'กระเพราะหมูกรอบ', imageUrl: 'https://recipe.sgethai.com/wp-content/uploads/2025/06/130625-crispy-pork-belly-with-thai-basil-cover.webp', type: 'healthy' },
+        { name: 'ชานมไข่มุก', imageUrl: 'https://cdn-cms.pgimgs.com/static/2020/03/114784014_xl.jpg', type: 'unhealthy' },
+        { name: 'มาม่า', imageUrl: 'https://www.thaifranchisecenter.com/document/sme/picture/document_4896_p4_20190814163236.jpg', type: 'unhealthy' },
+        { name: 'ไก่ทอด', imageUrl: 'https://www.matichon.co.th/wp-content/uploads/2025/02/11-109.jpg', type: 'unhealthy' },
+        { name: 'เฟรนช์ฟราย', imageUrl: 'https://s359.thaicdn.net//pagebuilder/f6558105-e6e7-419b-a04d-edb108647bb1.jpg', type: 'unhealthy' },
+        { name: 'โดนัท', imageUrl: 'https://dynasty.co.th/images/stories/product/donat01.jpg', type: 'unhealthy' },
+        { name: 'น้ำอัดลม', imageUrl: 'https://www.js100.com/uploads/news/aa8d232683f00fc009a708a5758feb8e.jpg', type: 'unhealthy' }
     ];
 
     // --- Element Variables ---
     const startScreen = document.getElementById('start-screen');
     const gameArea = document.getElementById('game-area');
     const endScreen = document.getElementById('end-screen');
-    const loadingOverlay = document.getElementById('loading-overlay');
     const startButton = document.getElementById('startButton');
     const playAgainButton = document.getElementById('playAgainButton');
-    const generateFoodsButton = document.getElementById('generateFoodsButton');
     const scoreElement = document.getElementById('score');
     const cardBoard = document.getElementById('card-board');
     const dropBoxes = document.querySelectorAll('.drop-box');
     const highscoreList = document.getElementById('highscore-list');
-    const generateStatus = document.getElementById('generate-status');
     const timerElement = document.getElementById('time');
 
     // --- Game State Variables ---
     let score = 0;
     let draggedCard = null;
     let totalCardsOnStart = 0;
-    const HIGH_SCORES_KEY = 'boxOfBalanceHighScores_pixel_ai_12_full_v6';
+    const HIGH_SCORES_KEY = 'boxOfBalanceHighScores_pixel_12_final_images_v2';
     let timerInterval = null;
     let timeLeft = 60;
     const GAME_DURATION = 60;
 
     // --- Sound Effects Setup (using Tone.js) ---
     let soundsReady = false;
-    let correctSound, wrongSound, gameOverSound;
+    let correctSound, wrongSound, winSound, loseSound;
 
     function setupSounds() {
         if (soundsReady) return;
         correctSound = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } }).toDestination();
         wrongSound = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.2 } }).toDestination();
-        gameOverSound = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 1 } }).toDestination();
+        winSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0.2, release: 0.5 } }).toDestination();
+        loseSound = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.8, sustain: 0, release: 1 } }).toDestination();
         soundsReady = true;
     }
     
-    // --- Gemini API Configuration ---
-    const apiKey = ""; // Leave empty
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
     // --- Event Listeners ---
     startButton.addEventListener('click', () => {
         if (Tone.context.state !== 'running') {
@@ -432,11 +398,8 @@
         startGame();
     });
     playAgainButton.addEventListener('click', startGame);
-    generateFoodsButton.addEventListener('click', handleGenerateFoods);
 
     // --- Utility Functions ---
-    const showLoader = (show) => loadingOverlay.classList.toggle('hidden', !show);
-
     function showScoreFeedback(text, color, element) {
         const feedback = document.createElement('div');
         feedback.className = 'score-feedback';
@@ -467,58 +430,6 @@
         }
     }
 
-    // --- Gemini API Call Function ---
-    async function callGeminiAPI(payload, retries = 3, delay = 1000) {
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) {
-                if (response.status === 429 && retries > 0) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return callGeminiAPI(payload, retries - 1, delay * 2);
-                }
-                throw new Error(`API Error: ${response.statusText}`);
-            }
-            const result = await response.json();
-            const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!text) throw new Error("Invalid response structure from API.");
-            return text;
-        } catch (error) {
-            console.error("Gemini API call failed:", error);
-            return null;
-        }
-    }
-    
-    // --- AI Feature Handlers ---
-    async function handleGenerateFoods() {
-        showLoader(true);
-        generateFoodsButton.disabled = true;
-        generateStatus.textContent = 'กำลังสร้างเมนู...';
-        const prompt = "Generate a list of 12 common food items, with a mix of healthy and unhealthy items. Use specific examples like 'ข้าวกล้อง' (healthy) or 'ไก่ทอด' (unhealthy). For each item, provide a Thai name, a single representative emoji, and a type ('healthy' or 'unhealthy'). Provide the response as a valid JSON array of objects, where each object has keys: 'name' (string), 'emoji' (string), and 'type' (string).";
-        const payload = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "emoji": { "type": "STRING" }, "type": { "type": "STRING" } }, required: ["name", "emoji", "type"] } } }
-        };
-        const resultJson = await callGeminiAPI(payload);
-        showLoader(false);
-        generateFoodsButton.disabled = false;
-        if (resultJson) {
-            try {
-                const newFoods = JSON.parse(resultJson);
-                if (Array.isArray(newFoods) && newFoods.length > 0) {
-                    foods = newFoods;
-                    generateStatus.textContent = 'สร้างเมนูอาหารใหม่สำเร็จ!';
-                } else { throw new Error("Parsed JSON is not a valid array."); }
-            } catch (e) {
-                console.error("Failed to parse new foods JSON:", e);
-                generateStatus.textContent = 'เกิดข้อผิดพลาด!';
-            }
-        } else { generateStatus.textContent = 'สร้างเมนูไม่สำเร็จ!'; }
-    }
-
     // --- Core Game Functions ---
     function startGame() {
         score = 0;
@@ -526,7 +437,6 @@
         startScreen.classList.add('hidden');
         endScreen.classList.add('hidden');
         gameArea.classList.remove('hidden');
-        generateStatus.textContent = '';
         createCards();
         startTimer();
     }
@@ -539,7 +449,12 @@
             const card = document.createElement('div');
             card.className = 'card';
             card.draggable = true;
-            card.textContent = food.emoji;
+            
+            const img = document.createElement('img');
+            img.src = food.imageUrl;
+            img.alt = food.name;
+            card.appendChild(img);
+
             card.dataset.type = food.type;
             card.addEventListener('dragstart', handleDragStart);
             card.addEventListener('dragend', handleDragEnd);
@@ -552,12 +467,14 @@
     }
 
     function handleDragStart(e) {
-        draggedCard = e.target;
-        setTimeout(() => e.target.classList.add('dragging'), 0);
+        draggedCard = e.target.closest('.card');
+        setTimeout(() => draggedCard.classList.add('dragging'), 0);
     }
 
     function handleDragEnd(e) {
-        e.target.classList.remove('dragging');
+        if (draggedCard) {
+            draggedCard.classList.remove('dragging');
+        }
         draggedCard = null;
     }
 
@@ -602,9 +519,19 @@
 
     function endGame(isTimeout) {
         clearInterval(timerInterval);
-        if(soundsReady) gameOverSound.triggerAttackRelease("G2", "2n");
-
+        
         let finalScore = score;
+        
+        // --- UPDATED: Play sound based on score ---
+        if (soundsReady) {
+            const now = Tone.now();
+            if (finalScore >= 6) { // Happy sound for score 6 and above
+                winSound.triggerAttackRelease("C5", "8n", now);
+                winSound.triggerAttackRelease("G5", "4n", now + 0.2);
+            } else { // Sad sound for score below 6
+                loseSound.triggerAttackRelease("F3", "2n", now);
+            }
+        }
         
         gameArea.classList.add('hidden');
         endScreen.classList.remove('hidden');
